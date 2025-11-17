@@ -66,21 +66,53 @@ def encode_twos_complement(base10: int):
 
 def int_add(num1: [], num2: []):
 	#ALU flags
-	V, C, N, Z = 0
+	V, C, N, Z = 0, 0, 0, 1
 	
 	result = [0] * 32
-	carry = False
+	carry = 0
 	
 	for i in range(31, 0, -1):
 		result[i] = num1[i] ^ num2[i]
+		#print(f"bit {i}: num1 - {num1[i]} num2 - {num2[i]} carry - {carry} result - {result[i]}")
+		
 		if carry:
 			result[i] = result[i] ^ 1
+			#print("After 2nd XOR from carry:", result[i])
 		
-		if num1[i] & num2[i]:
-			carry = True
+		#account for carryover into next iteration
+		if (num1[i] & num2[i]) or (num1[i] & carry) or (num2[i] & carry):
+			#condition: out of num1, num2, and carry, at least 2 of them are 1
+			carry = 1
+			
+			#CARRY OUT
+			if i == 0:
+				C = carry
+		
+		else:
+			carry = 0
+			
+		#ZERO: set to 1 by default, set to 0 if result is non-zero value
+		if result[i]:
+			Z = 0
+	
+	#NEGATIVE
+	N = result[0]
+	
+	#SIGNED OVERFLOW
+	V = (~(num1[0] ^ num2[0])) & (result[0] ^ num1[0])
+	
+	return result, V, C, N, Z
 
-if __name__ == "__main__":
-	test = -2**31
-	print("Binary bits:", encode_twos_complement(test)[0])
-	print("Hex string:", encode_twos_complement(test)[1])
-	print("Overflow:", encode_twos_complement(test)[2])
+# -------------- DEBUGGING/TESTS -------------- #
+#if __name__ == "__main__":
+#	test1 = 13
+#	test2 = 7
+#	print("Binary bits:", encode_twos_complement(test1)[0])
+#	print("Hex string:", encode_twos_complement(test1)[1])
+#	print("Overflow:", encode_twos_complement(test1)[2])
+
+#	test1 = encode_twos_complement(test1)[0]
+#	test2 = encode_twos_complement(test2)[0]
+
+#	for i in range(0, 5):
+#		print(int_add(test1, test2)[i])
